@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background-color: #f8fafc;
+    color: #1e293b;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+}
+
+/* Glassmorphism & Frosty UI surfaces */
+.frost-surface {
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05), 0 1px 3px 0 rgba(15, 23, 42, 0.02);
+}
+
+.frost-surface-hover {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.frost-surface-hover:hover {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(20, 184, 166, 0.3);
+  box-shadow: 0 14px 34px -10px rgba(20, 184, 166, 0.08), 0 4px 12px 0 rgba(15, 23, 42, 0.03);
+}
+
+.frost-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.03), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+}
+
+.frost-card-secondary {
+  background: rgba(248, 250, 252, 0.8);
+  border: 1px solid #edf2f7;
+  border-radius: 1.25rem;
+}
+
+.frost-pill {
+  background: rgba(241, 245, 249, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.15s ease-in-out;
+}
+
+.frost-pill:hover {
+  background: rgba(236, 253, 245, 0.9);
+  border-color: rgba(52, 211, 153, 0.5);
+  color: #065f46;
+}
+
+/* Custom Soft Gradients */
+.bg-chilling-gradient {
+  background: radial-gradient(circle at 10% 20%, rgba(204, 251, 241, 0.35) 0%, rgba(240, 253, 250, 0.15) 45%, rgba(248, 250, 252, 0) 80%);
+}
+
+.bg-hero-glow {
+  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(13, 148, 136, 0.07), transparent);
+}
+
+/* Leaflet Map Styling Refinement */
+.leaflet-container {
+  font-family: inherit !important;
+  background-color: #f1f5f9 !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.12) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  padding: 0.85rem 1rem !important;
+  line-height: 1.4 !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.95) !important;
+  box-shadow: none !important;
+}
+
+.leaflet-bar {
+  border: none !important;
+  box-shadow: 0 4px 14px 0 rgba(15, 23, 42, 0.08) !important;
+  border-radius: 0.875rem !important;
+  overflow: hidden !important;
+}
+
+.leaflet-bar a {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(8px) !important;
+  color: #334155 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  transition: all 0.15s ease !important;
+}
+
+.leaflet-bar a:hover {
+  background-color: #ffffff !important;
+  color: #0f766e !important;
+}
+
+/* Pulse Glows */
+@keyframes subtle-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.4;
+  }
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 2.5s infinite ease-in-out;
+}

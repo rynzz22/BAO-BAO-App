@@ -1,0 +1,463 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  PASSENGER
+  DRIVER
+  DISPATCHER
+  ADMIN
+
+  @@map("user_role")
+}
+
+enum DriverChannel {
+  APP
+  SMS
+  DISPATCHER
+
+  @@map("driver_channel")
+}
+
+enum TrackingSource {
+  LIVE_APP
+  LAST_REPORTED
+  TERMINAL
+  GPS_TRACKER
+  UNKNOWN
+
+  @@map("tracking_source")
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  SUSPENDED
+  REJECTED
+
+  @@map("approval_status")
+}
+
+enum DriverAvailability {
+  OFFLINE
+  AVAILABLE
+  BUSY
+
+  @@map("driver_availability")
+}
+
+enum RideStatus {
+  REQUESTED
+  DISPATCHING
+  OFFERED
+  ACCEPTED
+  DRIVER_EN_ROUTE
+  ARRIVED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  EXPIRED
+  NO_DRIVER_FOUND
+
+  @@map("ride_status")
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+
+  @@map("offer_status")
+}
+
+enum ActorType {
+  PASSENGER
+  DRIVER
+  DISPATCHER
+  ADMIN
+  SYSTEM
+  SMS
+
+  @@map("actor_type")
+}
+
+enum ZoneType {
+  PICKUP
+  TERMINAL
+  AREA
+
+  @@map("zone_type")
+}
+
+enum SmsDirection {
+  OUT
+  IN
+
+  @@map("sms_direction")
+}
+
+enum SmsStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  RECEIVED
+
+  @@map("sms_status")
+}
+
+enum IncidentStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+
+  @@map("incident_status")
+}
+
+model Profile {
+  id                String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fullName          String?      @map("full_name")
+  phoneNumber       String?      @unique @map("phone_number")
+  email             String?
+  role              UserRole     @default(PASSENGER)
+  preferredLanguage String       @default("en") @map("preferred_language")
+  isActive          Boolean      @default(true) @map("is_active")
+  createdAt         DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  driver              Driver?
+  rideRequests        RideRequest[]
+  ratingsGiven        Rating[]
+  incidentReports     IncidentReport[]
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+  terminalDispatchers TerminalDispatcher[]
+  statusHistory       RideStatusHistory[]
+  respondedOffers     RideOffer[]          @relation("OfferRespondedBy")
+
+  @@map("profiles")
+}
+
+model Driver {
+  id             String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId      String?            @unique @map("profile_id") @db.Uuid
+  fullName       String             @map("full_name")
+  phoneNumber    String?            @map("phone_number")
+  licenseNo      String             @map("license_no")
+  primaryChannel DriverChannel      @default(APP) @map("primary_channel")
+  approvalStatus ApprovalStatus     @default(PENDING) @map("approval_status")
+  availability   DriverAvailability @default(OFFLINE)
+  driverCode     String             @unique @map("driver_code")
+  homeTerminalId String?            @map("home_terminal_id") @db.Uuid
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz
+
+  profile        Profile?               @relation(fields: [profileId], references: [id])
+  homeTerminal   Terminal?              @relation(fields: [homeTerminalId], references: [id])
+  driverVehicles DriverVehicle[]
+  location       DriverLocation?
+  locationHistory DriverLocationHistory[]
+  offers         RideOffer[]
+  terminalQueue  TerminalQueue[]
+  assignedRides  RideRequest[]
+  ratingsReceived Rating[]
+
+  @@map("drivers")
+}
+
+model VehicleType {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code            String    @unique // TRICYCLE, BAO_BAO, OTHER
+  name            String
+  defaultCapacity Int       @default(3) @map("default_capacity")
+  vehicles        Vehicle[]
+
+  @@map("vehicle_types")
+}
+
+model Vehicle {
+  id             String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  vehicleTypeId  String         @map("vehicle_type_id") @db.Uuid
+  plateOrBodyNo  String         @unique @map("plate_or_body_no")
+  capacity       Int            @default(3)
+  approvalStatus ApprovalStatus @default(PENDING) @map("approval_status")
+  photoUrl       String?        @map("photo_url")
+  isActive       Boolean        @default(true) @map("is_active")
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  vehicleType    VehicleType    @relation(fields: [vehicleTypeId], references: [id])
+  driverVehicles DriverVehicle[]
+  assignedRides  RideRequest[]
+
+  @@map("vehicles")
+}
+
+model DriverVehicle {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  driverId   String   @map("driver_id") @db.Uuid
+  vehicleId  String   @map("vehicle_id") @db.Uuid
+  isCurrent  Boolean  @default(true) @map("is_current")
+  assignedAt DateTime @default(now()) @map("assigned_at") @db.Timestamptz
+
+  driver  Driver  @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("driver_vehicles")
+}
+
+model DriverLocation {
+  driverId       String                  @id @map("driver_id") @db.Uuid
+  point          Unsupported("geography(Point, 4326)")
+  trackingSource TrackingSource          @default(UNKNOWN) @map("tracking_source")
+  lastZoneId     String?                 @map("last_zone_id") @db.Uuid
+  updatedAt      DateTime                @default(now()) @map("updated_at") @db.Timestamptz
+
+  driver   Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  lastZone Zone?  @relation(fields: [lastZoneId], references: [id])
+
+  @@map("driver_locations")
+}
+
+model DriverLocationHistory {
+  id             BigInt                  @id @default(autoincrement())
+  driverId       String                  @map("driver_id") @db.Uuid
+  point          Unsupported("geography(Point, 4326)")
+  trackingSource TrackingSource          @map("tracking_source")
+  recordedAt     DateTime                @default(now()) @map("recorded_at") @db.Timestamptz
+
+  driver Driver @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@map("driver_location_history")
+}
+
+model Terminal {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  zoneId    String?  @map("zone_id") @db.Uuid
+  point     Unsupported("geography(Point, 4326)")
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  zone        Zone?                @relation(fields: [zoneId], references: [id])
+  dispatchers TerminalDispatcher[]
+  queue       TerminalQueue[]
+  homeDrivers Driver[]
+
+  @@map("terminals")
+}
+
+model TerminalDispatcher {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  terminalId String   @map("terminal_id") @db.Uuid
+  profileId  String   @map("profile_id") @db.Uuid
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  terminal Terminal @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+  profile  Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@unique([terminalId, profileId])
+  @@map("terminal_dispatchers")
+}
+
+model TerminalQueue {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  terminalId   String    @map("terminal_id") @db.Uuid
+  driverId     String    @map("driver_id") @db.Uuid
+  position     Int
+  checkedInAt  DateTime  @default(now()) @map("checked_in_at") @db.Timestamptz
+  checkedOutAt DateTime? @map("checked_out_at") @db.Timestamptz
+
+  terminal Terminal @relation(fields: [terminalId], references: [id], onDelete: Cascade)
+  driver   Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@map("terminal_queue")
+}
+
+model Zone {
+  id        String                                 @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code      String                                 @unique // SCHOOL, MARKET, POBLACION
+  name      String
+  zoneType  ZoneType                               @default(PICKUP) @map("zone_type")
+  center    Unsupported("geography(Point, 4326)")
+  boundary  Unsupported("geography(Polygon, 4326)")?
+  isActive  Boolean                                @default(true) @map("is_active")
+  createdAt DateTime                               @default(now()) @map("created_at") @db.Timestamptz
+
+  terminals       Terminal[]
+  routeStops      RouteStop[]
+  rideRequests    RideRequest[]
+  driverLocations DriverLocation[]
+
+  @@map("zones")
+}
+
+model Route {
+  id        String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  isActive  Boolean     @default(true) @map("is_active")
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  stops     RouteStop[]
+
+  @@map("routes")
+}
+
+model RouteStop {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  routeId   String @map("route_id") @db.Uuid
+  zoneId    String @map("zone_id") @db.Uuid
+  stopOrder Int    @map("stop_order")
+
+  route Route @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  zone  Zone  @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@unique([routeId, stopOrder])
+  @@map("route_stops")
+}
+
+model RideRequest {
+  id               String                                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  publicCode       String                                @unique @map("public_code")
+  passengerId      String                                @map("passenger_id") @db.Uuid
+  passengerCount   Int                                   @default(1) @map("passenger_count")
+  pickupPoint      Unsupported("geography(Point, 4326)") @map("pickup_point")
+  pickupLabel      String                                @map("pickup_label")
+  pickupZoneId     String?                               @map("pickup_zone_id") @db.Uuid
+  destinationPoint Unsupported("geography(Point, 4326)") @map("destination_point")
+  destinationLabel String                                @map("destination_label")
+  status           RideStatus                            @default(REQUESTED)
+  driverId         String?                               @map("driver_id") @db.Uuid
+  vehicleId        String?                               @map("vehicle_id") @db.Uuid
+  channelUsed      String?                               @map("channel_used")
+  etaMinutes       Int?                                  @map("eta_minutes")
+  cancelReason     String?                               @map("cancel_reason")
+  requestedAt      DateTime                              @default(now()) @map("requested_at") @db.Timestamptz
+  expiresAt        DateTime?                             @map("expires_at") @db.Timestamptz
+  acceptedAt       DateTime?                             @map("accepted_at") @db.Timestamptz
+  pickedUpAt       DateTime?                             @map("picked_up_at") @db.Timestamptz
+  completedAt      DateTime?                             @map("completed_at") @db.Timestamptz
+
+  passenger     Profile             @relation(fields: [passengerId], references: [id])
+  pickupZone    Zone?               @relation(fields: [pickupZoneId], references: [id])
+  driver        Driver?             @relation(fields: [driverId], references: [id])
+  vehicle       Vehicle?            @relation(fields: [vehicleId], references: [id])
+  offers        RideOffer[]
+  statusHistory RideStatusHistory[]
+  rating        Rating?
+  incidentReports IncidentReport[]
+
+  @@map("ride_requests")
+}
+
+model RideOffer {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rideId      String        @map("ride_id") @db.Uuid
+  driverId    String        @map("driver_id") @db.Uuid
+  channel     DriverChannel
+  status      OfferStatus   @default(PENDING)
+  sequence    Int           @default(1)
+  offeredAt   DateTime      @default(now()) @map("offered_at") @db.Timestamptz
+  expiresAt   DateTime      @map("expires_at") @db.Timestamptz
+  respondedAt DateTime?     @map("responded_at") @db.Timestamptz
+  respondedBy String?       @map("responded_by") @db.Uuid
+
+  ride        RideRequest   @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  driver      Driver        @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  responder   Profile?      @relation("OfferRespondedBy", fields: [respondedBy], references: [id])
+  smsMessages SmsMessage[]
+
+  @@map("ride_offers")
+}
+
+model RideStatusHistory {
+  id             BigInt     @id @default(autoincrement())
+  rideId         String     @map("ride_id") @db.Uuid
+  fromStatus     RideStatus? @map("from_status")
+  toStatus       RideStatus @map("to_status")
+  actorProfileId String?    @map("actor_profile_id") @db.Uuid
+  actorType      ActorType  @map("actor_type")
+  meta           Json?
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz
+
+  ride         RideRequest @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  actorProfile Profile?    @relation(fields: [actorProfileId], references: [id])
+
+  @@map("ride_status_history")
+}
+
+model SmsMessage {
+  id                 String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  direction          SmsDirection
+  phoneNumber        String       @map("phone_number")
+  body               String
+  rideOfferId        String?      @map("ride_offer_id") @db.Uuid
+  status             SmsStatus    @default(QUEUED)
+  providerMessageId  String?      @map("provider_message_id")
+  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamptz
+
+  rideOffer RideOffer? @relation(fields: [rideOfferId], references: [id])
+
+  @@map("sms_messages")
+}
+
+model Rating {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rideId      String   @unique @map("ride_id") @db.Uuid
+  passengerId String   @map("passenger_id") @db.Uuid
+  driverId    String   @map("driver_id") @db.Uuid
+  score       Int
+  comment     String?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  ride      RideRequest @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  passenger Profile     @relation(fields: [passengerId], references: [id])
+  driver    Driver      @relation(fields: [driverId], references: [id])
+
+  @@map("ratings")
+}
+
+model IncidentReport {
+  id          String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  rideId      String         @map("ride_id") @db.Uuid
+  reporterId  String         @map("reporter_id") @db.Uuid
+  category    String
+  description String
+  status      IncidentStatus @default(OPEN)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz
+
+  ride     RideRequest @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  reporter Profile     @relation(fields: [reporterId], references: [id])
+
+  @@map("incident_reports")
+}
+
+model Notification {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId String   @map("profile_id") @db.Uuid
+  type      String
+  payload   Json     @default("{}")
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id        BigInt   @id @default(autoincrement())
+  actorId   String?  @map("actor_id") @db.Uuid
+  action    String
+  entity    String
+  entityId  String?  @map("entity_id") @db.Uuid
+  diff      Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  actor Profile? @relation(fields: [actorId], references: [id])
+
+  @@map("audit_logs")
+}

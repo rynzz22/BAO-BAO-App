@@ -1,0 +1,7 @@
+{
+  "name": "BAO BAO — Smart Community Transportation",
+  "description": "Inclusive community transportation platform for Talibon, connecting passengers with Tricycles, Bao Bao, and local vehicles across App, SMS, and Dispatcher channels.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
