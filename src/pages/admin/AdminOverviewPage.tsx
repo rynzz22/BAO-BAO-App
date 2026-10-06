@@ -54,7 +54,7 @@ export const AdminOverviewPage: React.FC = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="stats-strip">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
           <div className="flex justify-between items-start">
             <span className="text-xs font-bold text-slate-400 uppercase">Active Drivers</span>
@@ -106,7 +106,7 @@ export const AdminOverviewPage: React.FC = () => {
           <TrendingUp className="w-4 h-4 text-emerald-600" />
           Driver Acceptance Rate by Channel
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="channel-list">
           <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/70 space-y-1">
             <span className="text-xs font-bold text-slate-600 uppercase">App Channel</span>
             <div className="text-xl font-black text-emerald-700">

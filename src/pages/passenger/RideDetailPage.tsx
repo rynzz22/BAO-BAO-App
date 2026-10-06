@@ -111,9 +111,9 @@ export const RideDetailPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="flex flex-col gap-6">
         {/* Left: Map Tracking */}
-        <div className="md:col-span-7 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
           <MapView
             center={ride.pickupPoint}
             pickup={ride.pickupPoint}
@@ -161,7 +161,7 @@ export const RideDetailPage: React.FC = () => {
         </div>
 
         {/* Right: Driver Information & Actions */}
-        <div className="md:col-span-5 space-y-4">
+        <div className="space-y-4">
           {/* Driver Assigned Card */}
           {ride.driver ? (
             <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">

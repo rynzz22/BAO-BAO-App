@@ -25,14 +25,18 @@ export const LoginPage: React.FC = () => {
       // In production, this would call supabase.auth.signInWithPassword or signUp.
       // Here, we sync with the backend /auth/sync endpoint to register/retrieve the profile.
       const userId = `usr-${Date.now()}`;
-      const profile = await api.post<ProfileDto>('/auth/sync', {
-        fullName: fullName || email.split('@')[0],
-        email,
-        role,
-        preferredLanguage: 'en',
-      }, {
-        headers: { Authorization: `Bearer ${userId}` },
-      });
+      const profile = await api.post<ProfileDto>(
+        '/auth/sync',
+        {
+          fullName: fullName || email.split('@')[0],
+          email,
+          role,
+          preferredLanguage: 'en',
+        },
+        {
+          headers: { Authorization: `Bearer ${userId}` },
+        },
+      );
 
       setAuth(userId, profile);
 
@@ -63,52 +67,16 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[85vh] flex flex-col justify-center py-8 sm:px-6 lg:px-8">
+    <div className="login-page min-h-screen flex flex-col justify-center py-12 px-5">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <div className="w-16 h-16 rounded-2xl bg-emerald-600 text-white text-3xl font-extrabold flex items-center justify-center mx-auto shadow-md mb-3">
           🛺
         </div>
-        <h2 className="text-3xl font-black tracking-tight text-slate-900">
-          BAO BAO Talibon
-        </h2>
-        <p className="mt-1 text-sm text-slate-600">
-          Community transportation across App, SMS, and Dispatcher channels
-        </p>
+        <h2 className="text-3xl font-black tracking-tight text-slate-900">BAO BAO Talibon</h2>
+        <p className="mt-1 text-sm text-slate-600">Your everyday ride. Proudly Talibon, Bohol.</p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Quick Demo Personas */}
-        <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 mb-6 shadow-xs">
-          <div className="flex items-center gap-2 mb-2 font-bold text-xs text-emerald-900 uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4 text-emerald-700" />
-            <span>Instant Demo Personas</span>
-          </div>
-          <p className="text-xs text-emerald-800 mb-3">
-            Click any role to log in with pre-configured seed data and credentials:
-          </p>
-          <div className="grid grid-cols-2 gap-2">
-            {PRESET_PERSONAS.map((p) => (
-              <button
-                key={p.id}
-                type="button"
-                disabled={loading}
-                onClick={() => handleQuickPersonaLogin(p)}
-                className="text-left p-2.5 bg-white border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100/50 rounded-xl transition-all shadow-xs flex flex-col"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-slate-900 truncate">{p.name.split(' ')[0]}</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                    {p.role}
-                  </span>
-                </div>
-                <span className="text-[11px] text-slate-500 truncate mt-1">
-                  {p.description}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Regular Login Form */}
         <div className="bg-white py-8 px-4 shadow-sm border border-slate-200 rounded-2xl sm:px-10">
           {error && (
@@ -194,7 +162,7 @@ export const LoginPage: React.FC = () => {
               disabled={loading}
               className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors shadow-sm disabled:opacity-50"
             >
-              <span>{isSignUp ? 'Create Account & Sync' : 'Sign In'}</span>
+              <span>{isSignUp ? 'Create account' : 'Sign In'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </form>
@@ -210,6 +178,38 @@ export const LoginPage: React.FC = () => {
             </button>
           </div>
         </div>
+        {/* Quick Demo Personas */}
+        <details className="quiet-details mt-6">
+          <summary>Explore the demo</summary>
+          <div className="pt-4">
+            <div className="flex items-center gap-2 mb-2 font-bold text-xs text-emerald-900 uppercase tracking-wider">
+              <ShieldCheck className="w-4 h-4 text-emerald-700" />
+              <span>Instant Demo Personas</span>
+            </div>
+            <p className="text-xs text-emerald-800 mb-3">Choose a role to look around:</p>
+            <div className="flex flex-col gap-2">
+              {PRESET_PERSONAS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  disabled={loading}
+                  onClick={() => handleQuickPersonaLogin(p)}
+                  className="text-left p-2.5 bg-white border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-100/50 rounded-xl transition-all shadow-xs flex flex-col"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-xs text-slate-900 truncate">
+                      {p.name.split(' ')[0]}
+                    </span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                      {p.role}
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 truncate mt-1">{p.description}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </details>
       </div>
     </div>
   );

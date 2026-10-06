@@ -97,9 +97,9 @@ export const DispatchBoardPage: React.FC = () => {
       </div>
 
       {/* Grid: Pending Requests & Available Drivers */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className="flex flex-col gap-6">
         {/* Left: Pending & Active Rides */}
-        <div className="lg:col-span-8 space-y-6">
+        <div className="space-y-6">
           {/* Pending Rides requiring dispatch or manual assignment */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
             <div className="flex justify-between items-center">
@@ -255,7 +255,7 @@ export const DispatchBoardPage: React.FC = () => {
         </div>
 
         {/* Right: Available Drivers Roster */}
-        <div className="lg:col-span-4 space-y-4">
+        <div className="space-y-4">
           <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 space-y-4">
             <div className="flex justify-between items-center">
               <div>

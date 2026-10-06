@@ -14,7 +14,7 @@ export interface SeedPersona {
 export const PRESET_PERSONAS: SeedPersona[] = [
   {
     role: UserRole.PASSENGER,
-    name: 'Ana Passenger',
+    name: 'AJ Passenger',
     email: 'ana@baobao.local',
     id: '44444444-4444-4444-4444-444444444404',
     description: 'Local student/commuter booking tricycles across Talibon',
@@ -129,6 +129,17 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'bao_bao_auth',
+      version: 1,
+      migrate: (persistedState) => {
+        const state = persistedState as AuthState;
+        if (
+          state.user?.id === PRESET_PERSONAS[0].id &&
+          state.user.fullName === 'AJ Passenger'
+        ) {
+          return { ...state, user: { ...state.user, fullName: PRESET_PERSONAS[0].name } };
+        }
+        return state;
+      },
     },
   ),
 );

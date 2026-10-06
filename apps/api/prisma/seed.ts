@@ -108,8 +108,8 @@ export const INITIAL_SEED_DATA: SeedData = {
     },
     {
       id: '44444444-4444-4444-4444-444444444404',
-      fullName: 'Ana Passenger',
-      email: 'ana@baobao.local',
+      fullName: 'AJ Passenger',
+      email: 'AJ@baobao.local',
       phoneNumber: '+639000000088',
       role: 'PASSENGER',
     },
